@@ -1,0 +1,57 @@
+enum importance {
+  veryLow
+  low
+  medium
+  high
+  veryHigh
+}
+
+enum Color {
+  pink
+  blue
+  green
+  yellow
+  purple
+  orange
+  mint
+  lavender
+  beige
+  coral
+}
+
+enum ScheduleImportance {
+  veryLow
+  low
+  medium
+  high
+  veryHigh
+}
+
+enum RepeatFrequency {
+  daily
+  weekly
+  monthly
+  yearly
+}
+
+model Schedule {
+  id              Int                @id @default(autoincrement())
+  title           String             @db.VarChar(255)
+  description     String?
+  importance      ScheduleImportance
+  color           Color
+  startDate       DateTime           @map("start_date") // ISO8601
+  endDate         DateTime           @map("end_date") // ISO8601
+  isRepeat        Boolean            @map("is_repeat")
+  repeatFrequency RepeatFrequency?   @map("repeat_frequency")
+  repeatInterval  Int?               @map("repeat_interval")
+  repeatEndCount  Int?               @map("repeat_end_count")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+
+  user   User  @relation(fields: [userId], references: [id])
+  userId Int   @unique @map("user_id")
+  tags   Tag[]
+
+  @@index([userId, id, startDate, endDate])
+}
