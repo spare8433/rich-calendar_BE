@@ -9,5 +9,5 @@ model User {
   passwordCodes PasswordCode[]
   schedule      Schedule[]
 
-  @@index([email, id])
+  @@index([email, id, username])
 }
