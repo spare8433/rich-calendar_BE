@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma-client";
 import { z } from "zod";
 import dayjs from "dayjs";
 import generateCode from "@/lib/generateCode";
+import sendGmail from "@/lib/mail";
 
 const requestSchema = z.object({ email: z.string().email() });
 
@@ -22,11 +23,18 @@ export async function POST(request: NextRequest) {
     });
     if (recentCodeCount >= 3) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
 
+    const generatedCode = generateCode(); // code 생성
+
     // 실제 email 로 코드 발송 부분
+    sendGmail({
+      to: requestBody.email,
+      subject: "[리치캘린더] 인증코드 발송",
+      text: "이메일 확인 인증코드: " + generatedCode,
+    });
 
     // email 발송 후 code 생성
     prisma.emailCode.create({
-      data: { userId: user.id, code: generateCode(), expiresAt: dayjs().add(30, "minute").toISOString() },
+      data: { userId: user.id, code: generatedCode, expiresAt: dayjs().add(30, "minute").toISOString() },
     });
 
     return NextResponse.json(null, { status: 200 });
