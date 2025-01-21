@@ -47,10 +47,9 @@ model Schedule {
   repeatInterval  Int?               @map("repeat_interval")
   repeatEndCount  Int?               @map("repeat_end_count")
   createdAt       DateTime           @default(now()) @map("created_at")
-  updatedAt       DateTime           @updatedAt @map("updated_at")
 
   user   User  @relation(fields: [userId], references: [id])
-  userId Int   @unique @map("user_id")
+  userId Int   @map("user_id")
   tags   Tag[]
 
   @@index([userId, id, startDate, endDate])

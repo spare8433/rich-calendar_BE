@@ -5,7 +5,7 @@ model EmailCode {
   expiresAt DateTime
 
   user   User @relation(fields: [userId], references: [id])
-  userId Int  @unique @map("user_id")
+  userId Int  @map("user_id")
 
   @@index([userId, id])
 }
@@ -17,7 +17,7 @@ model PasswordCode {
   expiresAt DateTime
 
   user   User @relation(fields: [userId], references: [id])
-  userId Int  @unique @map("user_id")
+  userId Int  @map("user_id")
 
   @@index([userId, id])
 }
