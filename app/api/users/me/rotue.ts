@@ -1,16 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import authenticate from "@/lib/authenticate";
-import { CustomError } from "@/lib/customError";
+import { prisma } from "@/lib/prisma-client";
+import apiHandler from "@/lib/apiHandler";
 
-export async function GET(request: NextRequest) {
-  try {
-    const user = await authenticate(request);
+export function GET(request: NextRequest) {
+  return apiHandler(async () => {
+    const user = await authenticate(request); // jwt token 으로 사용자 인증
     return NextResponse.json(user, { status: 200 });
-  } catch (error) {
-    console.error(error);
-    if (error instanceof CustomError) {
-      return NextResponse.json({ error: error.message }, { status: error.statusCode });
-    }
-    return NextResponse.json({ error: "Server Error" }, { status: 500 });
-  }
+  });
+}
+
+export function DELETE(request: NextRequest) {
+  return apiHandler(async () => {
+    const user = await authenticate(request); // jwt token 으로 사용자 인증
+
+    // 사용자 삭제
+    const deletedUser = await prisma.user.delete({ where: { id: user.id } });
+    if (!deletedUser) NextResponse.json({ error: "User not found" }, { status: 404 });
+
+    return NextResponse.json(user, { status: 200 });
+  });
 }
