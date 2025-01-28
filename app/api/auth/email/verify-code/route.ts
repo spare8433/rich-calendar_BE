@@ -27,8 +27,8 @@ export function POST(request: NextRequest) {
       },
       orderBy: { createdAt: "desc" },
     });
-    if (!verifiedCode) return NextResponse.json({ error: "Bad Request" }, { status: 400 });
+    if (!verifiedCode) return NextResponse.json({ success: false }, { status: 200 });
 
-    return NextResponse.json("ok", { status: 200 });
+    return NextResponse.json({ success: true }, { status: 200 });
   });
 }

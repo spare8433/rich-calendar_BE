@@ -17,7 +17,7 @@ export function POST(request: NextRequest) {
       select: { username: true, createdAt: true },
       where: { email: requestBody.email },
     });
-    if (!user) return NextResponse.json({ error: "Bad request" }, { status: 400 });
+    if (!user) return NextResponse.json({ success: false }, { status: 200 });
 
     return NextResponse.json({ success: true, ...user }, { status: 200 });
   });

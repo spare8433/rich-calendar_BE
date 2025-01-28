@@ -27,6 +27,16 @@ export function POST(request: NextRequest) {
 
     const token = generateToken(user.id); // jwt 토큰 발급
 
-    return NextResponse.json({ token }, { status: 200 });
+    const response = NextResponse.json("ok", { status: 200 });
+
+    response.cookies.set("token", token, {
+      httpOnly: true, // JavaScript에서 접근 불가
+      secure: process.env.NODE_ENV === "production", // HTTPS에서만 전송
+      sameSite: "strict", // CSRF 방지
+      maxAge: 60 * 60, // 1시간
+      path: "/",
+    });
+
+    return response;
   });
 }
