@@ -19,6 +19,7 @@ export function POST(request: NextRequest) {
 
     // email code 검증
     const verifiedCode = await prisma.passwordCode.findFirst({
+      select: { id: true },
       where: {
         userId: user.id,
         code: requestBody.code,
@@ -26,7 +27,7 @@ export function POST(request: NextRequest) {
       },
       orderBy: { createdAt: "desc" },
     });
-    if (!verifiedCode) return NextResponse.json({ success: false }, { status: 400 });
+    if (!verifiedCode) return NextResponse.json({ success: false }, { status: 200 });
 
     return NextResponse.json({ success: true }, { status: 200 });
   });

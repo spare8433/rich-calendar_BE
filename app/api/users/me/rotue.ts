@@ -5,8 +5,8 @@ import apiHandler from "@/lib/apiHandler";
 
 export function GET(request: NextRequest) {
   return apiHandler(async () => {
-    const user = await authenticate(request); // jwt token 으로 사용자 인증
-    return NextResponse.json(user, { status: 200 });
+    const { username, email } = await authenticate(request); // jwt token 으로 사용자 인증
+    return NextResponse.json({ username, email }, { status: 200 });
   });
 }
 

@@ -18,7 +18,25 @@ export async function GET(request: NextRequest, pathParams: { sid: string }) {
     if (!success) return NextResponse.json({ error: "Bad request" }, { status: 400 });
 
     // 스케줄 조회
-    const schedule = await prisma.schedule.findUnique({ where: { id: data.sid }, include: { tags: true } });
+    const schedule = await prisma.schedule.findUnique({
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        importance: true,
+        color: true,
+        startDate: true,
+        endDate: true,
+        isRepeat: true,
+        repeatFrequency: true,
+        repeatInterval: true,
+        repeatEndCount: true,
+        tags: {
+          select: { id: true, title: true },
+        },
+      },
+      where: { id: data.sid },
+    });
     if (!schedule) return NextResponse.json({ error: "Schedule not found" }, { status: 404 });
 
     return NextResponse.json(schedule, { status: 200 });
@@ -29,6 +47,7 @@ export async function GET(request: NextRequest, pathParams: { sid: string }) {
 }
 
 const updateScheduleSchema = z.object({
+  tagIds: z.array(z.coerce.number()).optional(),
   title: z.string().optional(),
   description: z.string().optional(),
   importance: z.enum(IMPORTANCE_OPTIONS).optional(),
@@ -56,8 +75,8 @@ export async function PATCH(request: NextRequest, pathParams: { sid: string }) {
 
     // 스케줄 조회
     const schedule = await prisma.schedule.findUnique({
+      select: { id: true },
       where: { id: parsedPathParams.data.sid },
-      include: { tags: true },
     });
     if (!schedule) return NextResponse.json({ error: "Schedule not found" }, { status: 404 });
 
@@ -76,7 +95,7 @@ export async function PATCH(request: NextRequest, pathParams: { sid: string }) {
 
     // 스케줄 업데이트 쿼리
     await prisma.schedule.update({
-      where: { id: parsedPathParams.data.sid },
+      where: { id: schedule.id },
       data: {
         ...(title && { title: title }),
         ...(description && { description: description }),
