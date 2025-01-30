@@ -35,7 +35,7 @@ export function POST(request: NextRequest) {
     });
 
     // email 발송 후 code db 에 저장
-    prisma.emailCode.create({
+    prisma.passwordCode.create({
       data: { userId: user.id, code: generatedCode, expiresAt: dayjs().add(30, "minute").toISOString() },
     });
 

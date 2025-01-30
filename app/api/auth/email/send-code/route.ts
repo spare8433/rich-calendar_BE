@@ -15,13 +15,13 @@ export function POST(request: NextRequest) {
     const { success, data: requestBody } = requestSchema.safeParse(await request.json());
     if (!success) return NextResponse.json({ error: "Bad request" }, { status: 400 });
 
-    // email 기준 user 검색
+    // email 기준 user 검색 (이미 사용 중인 email 확인)
     const user = await prisma.user.findUnique({ select: { id: true }, where: { email: requestBody.email } });
-    if (!user) return NextResponse.json({ error: "Bad Request" }, { status: 400 });
+    if (user) return NextResponse.json({ error: "Conflict" }, { status: 409 });
 
     // 30분내 발급된 code 갯수 확인
     const recentCodeCount = await prisma.emailCode.count({
-      where: { userId: user.id, createdAt: { gt: dayjs().subtract(30, "minute").toISOString() } },
+      where: { email: requestBody.email, createdAt: { gt: dayjs().subtract(30, "minute").toISOString() } },
     });
     if (recentCodeCount >= 3) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
 
@@ -35,9 +35,9 @@ export function POST(request: NextRequest) {
     });
 
     // email 발송 후 code 저장
-    prisma.emailCode.create({
+    await prisma.emailCode.create({
       data: {
-        userId: user.id,
+        email: requestBody.email,
         code: generatedCode,
         expiresAt: dayjs().add(30, "minute").toISOString(),
       },

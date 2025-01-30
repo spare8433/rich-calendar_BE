@@ -6,7 +6,6 @@ model User {
   createdAt DateTime @default(now())
 
   tags          Tag[]
-  emailCodes    EmailCode[]
   passwordCodes PasswordCode[]
   schedule      Schedule[]
 

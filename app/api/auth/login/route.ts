@@ -19,7 +19,7 @@ export function POST(request: NextRequest) {
       select: { id: true, password: true },
       where: { username: requestBody.username },
     });
-    if (!user) return NextResponse.json({ error: "Bad request" }, { status: 400 });
+    if (!user) return NextResponse.json({ error: "Not Found" }, { status: 404 });
 
     // 비밀번호 일치여부 확인
     const isPasswordValid = await bcrypt.compare(requestBody.password, user.password);
