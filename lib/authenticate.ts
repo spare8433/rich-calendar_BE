@@ -1,22 +1,22 @@
-import { NextRequest } from "next/server";
 import { verifyToken } from "./jwt";
 import { prisma } from "./prisma-client";
 import { CustomError } from "./customError";
 import { type PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { cookies } from "next/headers";
 
-const authenticate = async (req: NextRequest) => {
+const authenticate = async () => {
   try {
-    const token = req.headers.get("Authorization");
+    const cookieStore = await cookies();
+    const token = cookieStore.get("token");
+
     if (!token) {
       console.log("Token not provided");
       throw new CustomError("Unauthorized", 401);
     }
 
-    const jwt = token.split(" ")[1];
-
     let decoded;
     try {
-      decoded = verifyToken(jwt);
+      decoded = verifyToken(token.value);
     } catch {
       console.error("Token verification failed");
       throw new CustomError("Unauthorized", 401);
