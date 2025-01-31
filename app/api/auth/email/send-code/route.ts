@@ -39,7 +39,7 @@ export function POST(request: NextRequest) {
       data: {
         email: requestBody.email,
         code: generatedCode,
-        expiresAt: dayjs().add(30, "minute").toISOString(),
+        expiresAt: dayjs().add(10, "minute").toISOString(),
       },
     });
 

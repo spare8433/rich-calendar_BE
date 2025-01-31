@@ -15,7 +15,7 @@ export function POST(request: NextRequest) {
 
     // email 기준 user 검색
     const user = await prisma.user.findUnique({ select: { id: true }, where: { email: requestBody.email } });
-    if (!user) return NextResponse.json({ error: "Bad Request" }, { status: 400 });
+    if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     // email code 검증
     const verifiedCode = await prisma.passwordCode.findFirst({
