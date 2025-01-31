@@ -22,7 +22,7 @@ export function POST(request: NextRequest) {
       select: { id: true },
       where: { OR: [{ username: requestBody.username }, { email: requestBody.email }] },
     });
-    if (user) return NextResponse.json({ error: "Bad request" }, { status: 400 });
+    if (user) return NextResponse.json({ error: "Conflict" }, { status: 409 });
 
     const hashedPassword = await bcrypt.hash(requestBody.password, 10); // password 암호화
 

@@ -17,7 +17,7 @@ export function POST(request: NextRequest) {
 
     // email 기준 user 검색
     const user = await prisma.user.findUnique({ select: { id: true }, where: { email: requestBody.email } });
-    if (!user) return NextResponse.json({ error: "Bad Request" }, { status: 400 });
+    if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     // 30분내 발급된 code 갯수 확인
     const recentCodeCount = await prisma.passwordCode.count({
@@ -35,8 +35,8 @@ export function POST(request: NextRequest) {
     });
 
     // email 발송 후 code db 에 저장
-    prisma.passwordCode.create({
-      data: { userId: user.id, code: generatedCode, expiresAt: dayjs().add(30, "minute").toISOString() },
+    await prisma.passwordCode.create({
+      data: { userId: user.id, code: generatedCode, expiresAt: dayjs().add(10, "minute").toISOString() },
     });
 
     return NextResponse.json("ok", { status: 200 });
