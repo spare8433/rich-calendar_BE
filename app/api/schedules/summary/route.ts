@@ -13,7 +13,7 @@ const getSchedulesSchema = z.object({
 // 일자별 스케줄 목록 조회
 export function GET(request: NextRequest) {
   return apiHandler(async () => {
-    await authenticate(request); // jwt token 으로 사용자 인증
+    await authenticate(); // jwt token 으로 사용자 인증
 
     const queryParamsObject = getQueryParamObject(request); // query parameter 가져오기
 
