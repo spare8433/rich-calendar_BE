@@ -3,49 +3,7 @@ import { prisma } from "@/lib/prisma-client";
 import { z } from "zod";
 import { COLORS, IMPORTANCE_OPTIONS, REPEAT_FREQUENCY_OPTIONS } from "@/constants";
 import authenticate from "@/lib/authenticate";
-import { getQueryParamObject } from "@/lib/utils";
 import apiHandler from "@/lib/apiHandler";
-
-const getSchedulesSchema = z.object({
-  startDate: z.string().datetime(),
-  endDate: z.string().datetime(),
-  tagIds: z.array(z.coerce.number()).optional(),
-});
-
-// 스케줄 목록 조회
-export function GET(request: NextRequest) {
-  return apiHandler(async () => {
-    await authenticate(request); // jwt token 으로 사용자 인증
-
-    const queryParamsObject = getQueryParamObject(request); // query parameter 가져오기
-
-    // query parameter 검증
-    const { success, data: query } = getSchedulesSchema.safeParse(queryParamsObject);
-    if (!success) return NextResponse.json({ error: "Bad request" }, { status: 400 });
-
-    // 스케줄 목록 조회
-    const schedules = await prisma.schedule.findMany({
-      select: {
-        id: true,
-        title: true,
-        color: true,
-        startDate: true,
-        endDate: true,
-        isRepeat: true,
-        repeatFrequency: true,
-        repeatInterval: true,
-        repeatEndCount: true,
-      },
-      where: {
-        startDate: { gte: query.startDate },
-        endDate: { lte: query.endDate },
-        tags: { some: { id: { in: query.tagIds } } },
-      },
-    });
-
-    return NextResponse.json({ schedules }, { status: 200 });
-  });
-}
 
 const baseSchema = z.object({
   title: z.string(),
@@ -71,7 +29,7 @@ const createScheduleSchema = z.union([repeatSchema, noRepeatSchema]);
 // 스케줄 생성
 export function POST(request: NextRequest) {
   return apiHandler(async () => {
-    const user = await authenticate(request); // jwt token 으로 사용자 인증
+    const user = await authenticate(); // jwt token 으로 사용자 인증
 
     // request 검증
     const { success, data: requestBody } = createScheduleSchema.safeParse(await request.json());
