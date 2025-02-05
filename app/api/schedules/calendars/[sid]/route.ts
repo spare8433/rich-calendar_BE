@@ -15,21 +15,21 @@ const updateScheduleSchema = z.object({
   beforeEndAt: z.string().datetime(),
   startAt: z.string().datetime(),
   endAt: z.string().datetime(),
-  isRepeat: z.boolean(),
+  isRepeat: z.coerce.boolean(),
 });
 
 // 캘린더 뷰 일정 변경
-export function PATCH(request: NextRequest, pathParams: { sid: number }) {
-  apiHandler(async () => {
+export function PATCH(request: NextRequest, { params }: { params: Promise<{ sid: number }> }) {
+  return apiHandler(async () => {
     await authenticate(); // jwt token 으로 사용자 인증
 
     // path parameter 유효성 검증
-    const parsedPathParams = pathParamsSchema.safeParse(pathParams);
-    if (!parsedPathParams.success) return NextResponse.json({ error: "Bad request" }, { status: 400 });
+    const parsedPathParams = pathParamsSchema.safeParse(await params);
+    if (!parsedPathParams.success) return NextResponse.json({ error: "Bad request 1" }, { status: 400 });
 
     // request body 검증
     const parsedRequestBody = updateScheduleSchema.safeParse(await request.json());
-    if (!parsedRequestBody.success) return NextResponse.json({ error: "Bad request" }, { status: 400 });
+    if (!parsedRequestBody.success) return NextResponse.json({ error: "Bad request 2" }, { status: 400 });
 
     // 스케줄 조회
     const schedule = await prisma.schedule.findUnique({

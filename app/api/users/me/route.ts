@@ -1,18 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import authenticate from "@/lib/authenticate";
 import { prisma } from "@/lib/prisma-client";
 import apiHandler from "@/lib/apiHandler";
 
-export function GET(request: NextRequest) {
+export function GET() {
   return apiHandler(async () => {
-    const { username, email } = await authenticate(request); // jwt token 으로 사용자 인증
+    const { username, email } = await authenticate(); // jwt token 으로 사용자 인증
     return NextResponse.json({ username, email }, { status: 200 });
   });
 }
 
-export function DELETE(request: NextRequest) {
+export function DELETE() {
   return apiHandler(async () => {
-    const user = await authenticate(request); // jwt token 으로 사용자 인증
+    const user = await authenticate(); // jwt token 으로 사용자 인증
 
     // 사용자 삭제
     const deletedUser = await prisma.user.delete({ where: { id: user.id } });

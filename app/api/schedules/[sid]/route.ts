@@ -8,12 +8,12 @@ import apiHandler from "@/lib/apiHandler";
 const pathParamsSchema = z.object({ sid: z.coerce.number() });
 
 // 스케줄 조회
-export function GET(request: NextRequest, pathParams: { sid: string }) {
+export function GET(request: NextRequest, { params }: { params: Promise<{ sid: number }> }) {
   apiHandler(async () => {
     await authenticate(); // jwt token 으로 사용자 인증
 
     // path parameter 유효성 검증
-    const { success, data } = pathParamsSchema.safeParse(pathParams);
+    const { success, data } = pathParamsSchema.safeParse(await params);
     if (!success) return NextResponse.json({ error: "Bad request" }, { status: 400 });
 
     // 스케줄 조회
@@ -57,12 +57,12 @@ const updateScheduleSchema = z.object({
 });
 
 // 스케줄 수정
-export function PUT(request: NextRequest, pathParams: { sid: string }) {
+export function PUT(request: NextRequest, { params }: { params: Promise<{ sid: number }> }) {
   apiHandler(async () => {
     await authenticate(); // jwt token 으로 사용자 인증
 
     // path parameter 유효성 검증
-    const parsedPathParams = pathParamsSchema.safeParse(pathParams);
+    const parsedPathParams = pathParamsSchema.safeParse(await params);
     if (!parsedPathParams.success) return NextResponse.json({ error: "Bad request" }, { status: 400 });
 
     // request body 검증
@@ -95,12 +95,12 @@ export function PUT(request: NextRequest, pathParams: { sid: string }) {
 }
 
 // 스케줄 삭제
-export function DELETE(request: NextRequest, pathParams: { sid: string }) {
+export function DELETE(request: NextRequest, { params }: { params: Promise<{ sid: number }> }) {
   return apiHandler(async () => {
     await authenticate(); // jwt token 으로 사용자 인증
 
     // path parameter 유효성 검증
-    const { success, data: parsedPathParams } = pathParamsSchema.safeParse(pathParams);
+    const { success, data: parsedPathParams } = pathParamsSchema.safeParse(params);
     if (!success) return NextResponse.json({ error: "Bad request" }, { status: 400 });
 
     // 스케줄 삭제 쿼리

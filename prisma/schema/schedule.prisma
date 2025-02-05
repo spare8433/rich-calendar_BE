@@ -46,6 +46,7 @@ model Schedule {
   repeatFrequency RepeatFrequency?   @map("repeat_frequency")
   repeatInterval  Int?               @map("repeat_interval")
   repeatEndCount  Int?               @map("repeat_end_count")
+  repeatEndDate   DateTime?          @map("repeat_end_date")
   createdAt       DateTime           @default(now()) @map("created_at")
 
   user   User  @relation(fields: [userId], references: [id])

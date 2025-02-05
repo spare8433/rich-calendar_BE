@@ -1,5 +1,7 @@
+import { FREQUENCY } from "@/constant";
 import { prisma } from "@/lib/prisma-client";
 import bcrypt from "bcrypt";
+import dayjs from "dayjs";
 
 async function main() {
   const testUser = await prisma.user.upsert({
@@ -8,7 +10,7 @@ async function main() {
     create: {
       email: "thdqudcks2@gmail.com",
       username: "test1004",
-      password: bcrypt.hashSync("test1004123!", 10),
+      password: bcrypt.hashSync("Test1004123!", 10),
     },
   });
 
@@ -21,18 +23,27 @@ async function main() {
     ],
   });
 
+  const endDate = "2025-01-13T00:00:00.000Z";
+  const repeatFrequency = "weekly";
+  const repeatInterval = 1;
+  const repeatEndCount = 5;
+  const repeatEndDate = dayjs(endDate)
+    .add(repeatInterval * repeatEndCount, FREQUENCY[repeatFrequency])
+    .toISOString();
+
   await prisma.schedule.create({
     data: {
       title: "Weekly Standup",
       description: "09:00",
       importance: "veryHigh",
       color: "green",
-      startDate: "2025-01-11T00:00:00Z",
-      endDate: "2025-01-13T00:00:00Z",
+      startDate: "2025-01-11T00:00:00.000Z",
+      endDate,
       isRepeat: true,
-      repeatFrequency: "weekly",
-      repeatInterval: 3,
-      repeatEndCount: 5,
+      repeatFrequency,
+      repeatInterval,
+      repeatEndCount,
+      repeatEndDate,
       userId: testUser.id, // 사용자 연결
       tags: {
         connectOrCreate: {
