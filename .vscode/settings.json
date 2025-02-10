@@ -1,0 +1,6 @@
+{
+  "cSpell.words": ["autoincrement"],
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  }
+}
