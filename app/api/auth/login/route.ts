@@ -32,7 +32,7 @@ export function POST(request: NextRequest) {
     response.cookies.set("token", token, {
       httpOnly: true, // JavaScript에서 접근 불가
       secure: process.env.NODE_ENV === "production", // HTTPS에서만 전송
-      sameSite: "strict", // CSRF 방지
+      sameSite: "none",
       maxAge: 60 * 60, // 1시간
       path: "/",
     });
