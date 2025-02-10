@@ -30,7 +30,7 @@ export function POST(request: NextRequest) {
     const response = NextResponse.json("ok", { status: 200 });
 
     response.cookies.set("token", token, {
-      domain: process.env.COOKIE_DOMAIN,
+      domain: process.env.COOKIE_DOMAIN ?? "sss",
       httpOnly: true, // JavaScript에서 접근 불가
       secure: process.env.NODE_ENV === "production", // HTTPS에서만 전송
       sameSite: "none",
