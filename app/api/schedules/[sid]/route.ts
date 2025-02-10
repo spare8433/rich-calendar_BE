@@ -112,7 +112,7 @@ export function DELETE(request: NextRequest, { params }: { params: Promise<{ sid
     await authenticate(); // jwt token 으로 사용자 인증
 
     // path parameter 유효성 검증
-    const { success, data: parsedPathParams } = pathParamsSchema.safeParse(params);
+    const { success, data: parsedPathParams } = pathParamsSchema.safeParse(await params);
     if (!success) return NextResponse.json({ error: "Bad request" }, { status: 400 });
 
     // 스케줄 삭제 쿼리
