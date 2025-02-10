@@ -1,4 +1,6 @@
-export function getQueryParamObject(request: Request) {
-  const url = new URL(request.url);
-  return Object.fromEntries(url.searchParams.entries());
+import { NextRequest } from "next/server";
+
+export function getQueryParamObject(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
+  return Object.fromEntries(searchParams.entries());
 }

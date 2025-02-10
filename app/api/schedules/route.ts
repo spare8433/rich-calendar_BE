@@ -12,17 +12,17 @@ const baseSchema = z.object({
   color: z.enum(COLORS),
   startDate: z.string().datetime(),
   endDate: z.string().datetime(),
-  isRepeat: z.enum(["yes", "no"]),
+  tagIds: z.array(z.coerce.number()),
 });
 
 const repeatSchema = baseSchema.extend({
-  isRepeat: z.literal("yes"),
+  isRepeat: z.literal(true),
   repeatFrequency: z.enum(REPEAT_FREQUENCY_OPTIONS),
   repeatInterval: z.coerce.number(),
   repeatEndCount: z.coerce.number(),
 });
 
-const noRepeatSchema = baseSchema.extend({ isRepeat: z.literal("no") });
+const noRepeatSchema = baseSchema.extend({ isRepeat: z.literal(false) });
 
 const createScheduleSchema = z.union([repeatSchema, noRepeatSchema]);
 
@@ -35,9 +35,11 @@ export function POST(request: NextRequest) {
     const { success, data: requestBody } = createScheduleSchema.safeParse(await request.json());
     if (!success) return NextResponse.json({ error: "Bad request" }, { status: 400 });
 
+    const { tagIds, ...rest } = requestBody;
+
     // 스케줄 생성 쿼리
     await prisma.schedule.create({
-      data: { ...requestBody, isRepeat: requestBody.isRepeat === "yes", userId: user.id },
+      data: { ...rest, userId: user.id, tags: { connect: tagIds.map((id) => ({ id })) } },
     });
 
     return NextResponse.json("ok", { status: 200 });

@@ -80,7 +80,7 @@ export function GET(request: NextRequest) {
         let endAt = endDateDayjs.toISOString();
 
         // 종료 횟수(repeatEndCount)만큼 일정 반복 조건에 맞는 일정 배열에 저장
-        for (let repeatCount = 0; repeatCount <= repeatEndCount + 1; repeatCount++) {
+        for (let repeatCount = 0; repeatCount <= repeatEndCount; repeatCount++) {
           // 일정 반복 기준에 맞는 일정 시작, 종료 날짜 계산
           startAt = startDateDayjs.add(repeatInterval * repeatCount, FREQUENCY[repeatFrequency]).toISOString();
           endAt = endDateDayjs.add(repeatInterval * repeatCount, FREQUENCY[repeatFrequency]).toISOString();

@@ -9,7 +9,7 @@ const pathParamsSchema = z.object({ sid: z.coerce.number() });
 
 // 스케줄 조회
 export function GET(request: NextRequest, { params }: { params: Promise<{ sid: number }> }) {
-  apiHandler(async () => {
+  return apiHandler(async () => {
     await authenticate(); // jwt token 으로 사용자 인증
 
     // path parameter 유효성 검증
@@ -42,7 +42,7 @@ export function GET(request: NextRequest, { params }: { params: Promise<{ sid: n
   });
 }
 
-const updateScheduleSchema = z.object({
+const baseUpdateSchema = z.object({
   tagIds: z.array(z.coerce.number()),
   title: z.string(),
   description: z.string(),
@@ -50,15 +50,27 @@ const updateScheduleSchema = z.object({
   color: z.enum(COLORS),
   startDate: z.string().datetime(),
   endDate: z.string().datetime(),
-  isRepeat: z.enum(["yes", "no"]),
-  repeatFrequency: z.enum(REPEAT_FREQUENCY_OPTIONS).optional(),
-  repeatInterval: z.coerce.number().optional(),
-  repeatEndCount: z.coerce.number().optional(),
 });
+
+const updateRepeatSchema = baseUpdateSchema.extend({
+  isRepeat: z.literal(true),
+  repeatFrequency: z.enum(REPEAT_FREQUENCY_OPTIONS),
+  repeatInterval: z.coerce.number(),
+  repeatEndCount: z.coerce.number(),
+});
+
+const updateNoRepeatSchema = baseUpdateSchema.extend({
+  isRepeat: z.literal(false),
+  repeatFrequency: z.null(),
+  repeatInterval: z.null(),
+  repeatEndCount: z.null(),
+});
+
+const updateScheduleSchema = z.union([updateRepeatSchema, updateNoRepeatSchema]);
 
 // 스케줄 수정
 export function PUT(request: NextRequest, { params }: { params: Promise<{ sid: number }> }) {
-  apiHandler(async () => {
+  return apiHandler(async () => {
     await authenticate(); // jwt token 으로 사용자 인증
 
     // path parameter 유효성 검증
@@ -83,9 +95,9 @@ export function PUT(request: NextRequest, { params }: { params: Promise<{ sid: n
       where: { id: schedule.id },
       data: {
         ...rest,
-        ...(isRepeat && isRepeat === "yes"
-          ? { isRepeat: true, repeatFrequency, repeatInterval, repeatEndCount }
-          : { isRepeat: false, repeatFrequency: null, repeatInterval: null, repeatEndCount: null }),
+        ...(isRepeat
+          ? { isRepeat, repeatFrequency, repeatInterval, repeatEndCount }
+          : { isRepeat, repeatFrequency: null, repeatInterval: null, repeatEndCount: null }),
         tags: { connect: tagIds.map((id) => ({ id })) },
       },
     });
@@ -104,7 +116,8 @@ export function DELETE(request: NextRequest, { params }: { params: Promise<{ sid
     if (!success) return NextResponse.json({ error: "Bad request" }, { status: 400 });
 
     // 스케줄 삭제 쿼리
-    await prisma.schedule.delete({ where: { id: parsedPathParams.sid } });
+    const schedule = await prisma.schedule.delete({ where: { id: parsedPathParams.sid } });
+    if (!schedule) return NextResponse.json({ error: "Schedule not found" }, { status: 404 });
 
     return NextResponse.json("ok", { status: 200 });
   });
