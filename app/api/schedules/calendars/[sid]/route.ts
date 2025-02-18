@@ -4,6 +4,7 @@ import { z } from "zod";
 import authenticate from "@/lib/authenticate";
 import apiHandler from "@/lib/apiHandler";
 import dayjs from "dayjs";
+import { calculateDateRangeDiff } from "@/lib/utils";
 
 const pathParamsSchema = z.object({ sid: z.coerce.number() });
 
@@ -33,7 +34,7 @@ export function PATCH(request: NextRequest, { params }: { params: Promise<{ sid:
 
     // 스케줄 조회
     const schedule = await prisma.schedule.findUnique({
-      select: { id: true, startDate: true, endDate: true },
+      select: { id: true, startDate: true, endDate: true, repeatEndDate: true },
       where: { id: parsedPathParams.data.sid },
     });
     if (!schedule) return NextResponse.json({ error: "Schedule not found" }, { status: 404 });
@@ -41,23 +42,27 @@ export function PATCH(request: NextRequest, { params }: { params: Promise<{ sid:
     // 변경된 일정이 반복일정의 경우 변경 이전과 이후 날짜(startAt, beforeStartAt)를 비교
     // 이후 실제 일정 날짜(db 의 startDate, endDate)를 변경
     // ※ 일정의 startDate, endDate 기준으로 반복 일정을 구성하므로 startDate, endDate 값 변경시 이후 반복일정에 동일한 날짜 변경사항 적용
-    if (parsedRequestBody.data.isRepeat) {
-      const { startAt, endAt, beforeStartAt, beforeEndAt } = parsedRequestBody.data;
-      const startDiffMs = dayjs(startAt).diff(dayjs(beforeStartAt));
-      const endDiffMs = dayjs(endAt).diff(dayjs(beforeEndAt));
 
-      await prisma.schedule.update({
-        where: { id: schedule.id },
-        data: {
-          startDate: dayjs(schedule.startDate).add(startDiffMs, "ms").toISOString(),
-          endDate: dayjs(schedule.endDate).add(endDiffMs, "ms").toISOString(),
-        },
-      });
-    } else {
-      // 반복일정이 아닌 일반 일정은 변경된 내용을 startDate, endDate 에 그대로 적용
-      const { startAt, endAt } = parsedRequestBody.data;
-      await prisma.schedule.update({ where: { id: schedule.id }, data: { startDate: startAt, endDate: endAt } });
-    }
+    const { startAt, endAt, beforeStartAt, beforeEndAt, isRepeat } = parsedRequestBody.data;
+    const { startDiffMs, endDiffMs } = calculateDateRangeDiff({ startAt, endAt, beforeStartAt, beforeEndAt });
+
+    await prisma.schedule.update({
+      where: { id: schedule.id },
+      data: isRepeat
+        ? {
+            // 변경된 일정이 반복일정의 경우 변경 이전과 이후 날짜(startAt, beforeStartAt)를 비교 후 실제 일정 날짜(db 의 startDate, endDate)를 변경
+            // ※ 일정의 startDate, endDate 기준으로 반복 일정을 구성하므로 startDate, endDate 값 변경시 최종적으로 반복일정 전체에 동일한 날짜 변경사항이 적용
+            startDate: dayjs(schedule.startDate).add(startDiffMs, "ms").toISOString(),
+            endDate: dayjs(schedule.endDate).add(endDiffMs, "ms").toISOString(),
+            repeatEndDate: dayjs(schedule.repeatEndDate).add(endDiffMs, "ms").toISOString(),
+          }
+        : {
+            // 반복일정이 아닌 일반 일정은 변경된 내용을 startDate, endDate 에 그대로 적용
+            startDate: startAt,
+            endDate: endAt,
+            repeatEndDate: endAt,
+          },
+    });
 
     return NextResponse.json("ok", { status: 200 });
   });

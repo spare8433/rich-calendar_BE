@@ -4,6 +4,8 @@ import { z } from "zod";
 import { COLORS, IMPORTANCE_OPTIONS, REPEAT_FREQUENCY_OPTIONS } from "@/constants";
 import authenticate from "@/lib/authenticate";
 import apiHandler from "@/lib/apiHandler";
+import { calculateDateRangeDiff, calculateRepeatEndDate } from "@/lib/utils";
+import dayjs from "dayjs";
 
 const pathParamsSchema = z.object({ sid: z.coerce.number() });
 
@@ -48,8 +50,10 @@ const baseUpdateSchema = z.object({
   description: z.string(),
   importance: z.enum(IMPORTANCE_OPTIONS),
   color: z.enum(COLORS),
-  startDate: z.string().datetime(),
-  endDate: z.string().datetime(),
+  beforeStartAt: z.string().datetime(),
+  beforeEndAt: z.string().datetime(),
+  startAt: z.string().datetime(),
+  endAt: z.string().datetime(),
 });
 
 const updateRepeatSchema = baseUpdateSchema.extend({
@@ -78,27 +82,35 @@ export function PUT(request: NextRequest, { params }: { params: Promise<{ sid: n
     if (!parsedPathParams.success) return NextResponse.json({ error: "Bad request" }, { status: 400 });
 
     // request body 검증
-    const parsedRequestBody = updateScheduleSchema.safeParse(await request.json());
-    if (!parsedRequestBody.success) return NextResponse.json({ error: "Bad request" }, { status: 400 });
+    const { success, data: parsedRequestData } = updateScheduleSchema.safeParse(await request.json());
+    if (!success) return NextResponse.json({ error: "Bad request" }, { status: 400 });
 
     // 스케줄 조회
     const schedule = await prisma.schedule.findUnique({
-      select: { id: true },
+      select: { id: true, startDate: true, endDate: true },
       where: { id: parsedPathParams.data.sid },
     });
     if (!schedule) return NextResponse.json({ error: "Schedule not found" }, { status: 404 });
 
-    const { isRepeat, repeatFrequency, repeatInterval, repeatEndCount, tagIds, ...rest } = parsedRequestBody.data;
+    // const { tagIds, isRepeat, repeatEndCount, repeatFrequency, repeatInterval, endDate, ...rest } = parsedRequestData;
+    const { tagIds, startAt, endAt, beforeStartAt, beforeEndAt, ...updateRequest } = parsedRequestData;
+    const { isRepeat, repeatEndCount, repeatFrequency, repeatInterval } = updateRequest;
+    const { startDiffMs, endDiffMs } = calculateDateRangeDiff({ startAt, endAt, beforeStartAt, beforeEndAt });
+
+    const changedStartDate = dayjs(schedule.startDate).add(startDiffMs, "ms").toISOString();
+    const changedEndDate = dayjs(schedule.endDate).add(endDiffMs, "ms").toISOString();
 
     // 스케줄 업데이트 쿼리
     await prisma.schedule.update({
       where: { id: schedule.id },
       data: {
-        ...rest,
-        ...(isRepeat
-          ? { isRepeat, repeatFrequency, repeatInterval, repeatEndCount }
-          : { isRepeat, repeatFrequency: null, repeatInterval: null, repeatEndCount: null }),
+        ...updateRequest,
         tags: { connect: tagIds.map((id) => ({ id })) },
+        startDate: changedStartDate,
+        endDate: changedEndDate,
+        repeatEndDate: isRepeat
+          ? calculateRepeatEndDate({ repeatEndCount, repeatFrequency, repeatInterval, endDate: changedEndDate })
+          : changedEndDate,
       },
     });
 

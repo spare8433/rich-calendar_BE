@@ -4,6 +4,7 @@ import { z } from "zod";
 import { COLORS, IMPORTANCE_OPTIONS, REPEAT_FREQUENCY_OPTIONS } from "@/constants";
 import authenticate from "@/lib/authenticate";
 import apiHandler from "@/lib/apiHandler";
+import { calculateRepeatEndDate } from "@/lib/utils";
 
 const baseSchema = z.object({
   title: z.string(),
@@ -22,7 +23,12 @@ const repeatSchema = baseSchema.extend({
   repeatEndCount: z.coerce.number(),
 });
 
-const noRepeatSchema = baseSchema.extend({ isRepeat: z.literal(false) });
+const noRepeatSchema = baseSchema.extend({
+  isRepeat: z.literal(false),
+  repeatFrequency: z.null(),
+  repeatInterval: z.null(),
+  repeatEndCount: z.null(),
+});
 
 const createScheduleSchema = z.union([repeatSchema, noRepeatSchema]);
 
@@ -35,11 +41,19 @@ export function POST(request: NextRequest) {
     const { success, data: requestBody } = createScheduleSchema.safeParse(await request.json());
     if (!success) return NextResponse.json({ error: "Bad request" }, { status: 400 });
 
-    const { tagIds, ...rest } = requestBody;
+    const { tagIds, ...updateRequest } = requestBody;
+    const { isRepeat, repeatEndCount, repeatFrequency, repeatInterval, endDate } = updateRequest;
 
     // 스케줄 생성 쿼리
     await prisma.schedule.create({
-      data: { ...rest, userId: user.id, tags: { connect: tagIds.map((id) => ({ id })) } },
+      data: {
+        ...updateRequest,
+        userId: user.id,
+        repeatEndDate: isRepeat
+          ? calculateRepeatEndDate({ repeatEndCount, repeatFrequency, repeatInterval, endDate })
+          : endDate,
+        tags: { connect: tagIds.map((id) => ({ id })) },
+      },
     });
 
     return NextResponse.json("ok", { status: 200 });
