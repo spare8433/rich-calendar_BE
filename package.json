@@ -9,7 +9,8 @@
     "dev": "next dev -p 9090",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "6.2.0",
