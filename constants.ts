@@ -14,3 +14,10 @@ export const COLORS = [
 export const IMPORTANCE_OPTIONS = ["veryLow", "low", "medium", "high", "veryHigh"] as const;
 
 export const REPEAT_FREQUENCY_OPTIONS = ["daily", "weekly", "monthly", "yearly"] as const;
+
+export const FREQUENCY = {
+  daily: "day",
+  weekly: "week",
+  monthly: "month",
+  yearly: "year",
+} as const;

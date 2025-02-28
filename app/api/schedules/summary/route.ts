@@ -6,7 +6,7 @@ import { getQueryParamObject } from "@/lib/utils";
 import apiHandler from "@/lib/apiHandler";
 import { $Enums } from "@prisma/client";
 import dayjs from "dayjs";
-import { FREQUENCY } from "@/constant";
+import { FREQUENCY } from "@/constants";
 import utc from "dayjs/plugin/utc";
 
 dayjs.extend(utc);

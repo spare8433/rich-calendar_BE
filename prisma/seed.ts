@@ -1,4 +1,4 @@
-import { FREQUENCY } from "@/constant";
+import { FREQUENCY } from "@/constants";
 import { prisma } from "@/lib/prisma-client";
 import bcrypt from "bcrypt";
 import dayjs from "dayjs";

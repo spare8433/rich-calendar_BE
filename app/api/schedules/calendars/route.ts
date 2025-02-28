@@ -6,7 +6,7 @@ import { getQueryParamObject } from "@/lib/utils";
 import apiHandler from "@/lib/apiHandler";
 import dayjs from "dayjs";
 import { $Enums, Prisma } from "@prisma/client";
-import { FREQUENCY } from "@/constant";
+import { FREQUENCY } from "@/constants";
 
 const queryParamsSchema = z.object({
   startDate: z.string().datetime(),

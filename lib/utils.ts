@@ -1,4 +1,4 @@
-import { FREQUENCY } from "@/constant";
+import { FREQUENCY } from "@/constants";
 import { RepeatFrequency } from "@prisma/client";
 import dayjs from "dayjs";
 import { NextRequest } from "next/server";
